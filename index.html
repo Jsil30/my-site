@@ -12,6 +12,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+  /* Compact weather widget (small single-line card below header) */
+  .weather-card {
+    margin: 12px 0 0 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    padding: 0.35rem 0.6rem;
+    border-radius: 10px;
+    width: fit-content;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    color: var(--clr-text);
+    backdrop-filter: blur(6px);
+    font-size: 0.92rem;
+  }
+  .weather-emoji { font-size: 1.15rem; line-height: 1; }
+  .weather-info { display:flex; flex-direction:row; gap:0.45rem; align-items:center; }
+  .weather-temp { font-weight:700; font-size:1rem; }
+  .weather-cond { font-size:0.82rem; color:var(--clr-muted); }
+  .weather-meta { display:none; }
+  .weather-actions { margin-left: 0.4rem; display:flex; gap:0.4rem; align-items:center; }
+  .weather-btn { padding:0.25rem 0.5rem; border-radius:8px; border:1px solid var(--clr-border); background:transparent; color:var(--clr-text); font-size:0.78rem; cursor:pointer; }
+  .weather-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent); }
+  @media (max-width:900px){ .weather-card{ margin-inline:auto; } }
+  </style>
+
+  <style>
+  /* Wrapper to keep the weather card below the fixed navbar */
+  .weather-wrap {
+    margin-top: 72px; /* push below the fixed navbar (adjust if you change navbar padding) */
+    display: flex;
+    justify-content: flex-end;
+  }
+  @media (max-width:900px){ .weather-wrap { justify-content: center; margin-top: 64px; } }
+  </style>
 </head>
 <body>
 
@@ -28,6 +65,21 @@
       </ul>
     </div>
   </nav>
+  <!-- compact weather card placed below the header -->
+  <div class="weather-wrap">
+    <div class="container" style="display:flex; justify-content:flex-end;">
+      <div class="weather-card reveal" id="weather-card" role="region" aria-label="Current weather" aria-live="polite">
+      <div class="weather-emoji" id="weather-emoji">☀️</div>
+      <div class="weather-info">
+        <div class="weather-temp" id="weather-temp">—°C</div>
+        <div class="weather-cond" id="weather-cond">Detecting…</div>
+      </div>
+      <div class="weather-actions">
+        <button class="weather-btn" id="weather-retry" type="button">Retry</button>
+      </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== HERO ===== -->
   <section class="hero" id="home">
@@ -384,6 +436,89 @@
     </div>
   </footer>
 
+  <script>
+  (function(){
+    const elTemp = document.getElementById('weather-temp');
+    const elCond = document.getElementById('weather-cond');
+    const elEmoji = document.getElementById('weather-emoji');
+    const btnRetry = document.getElementById('weather-retry');
+    const card = document.getElementById('weather-card');
+
+    const weatherCodeMap = {
+      0: {emoji:'☀️', text:'Clear'},
+      1: {emoji:'🌤️', text:'Mainly clear'},
+      2: {emoji:'⛅', text:'Partly cloudy'},
+      3: {emoji:'☁️', text:'Overcast'},
+      45: {emoji:'🌫️', text:'Fog'},
+      48: {emoji:'🌫️', text:'Depositing rime fog'},
+      51: {emoji:'🌦️', text:'Light drizzle'},
+      53: {emoji:'🌦️', text:'Moderate drizzle'},
+      55: {emoji:'🌧️', text:'Dense drizzle'},
+      56: {emoji:'🥶', text:'Freezing drizzle'},
+      57: {emoji:'🥶', text:'Freezing drizzle'},
+      61: {emoji:'🌧️', text:'Slight rain'},
+      63: {emoji:'🌧️', text:'Moderate rain'},
+      65: {emoji:'🌧️', text:'Heavy rain'},
+      66: {emoji:'🥶', text:'Freezing rain'},
+      67: {emoji:'🥶', text:'Heavy freezing rain'},
+      71: {emoji:'❄️', text:'Slight snow'},
+      73: {emoji:'❄️', text:'Moderate snow'},
+      75: {emoji:'❄️', text:'Heavy snow'},
+      77: {emoji:'❄️', text:'Snow grains'},
+      80: {emoji:'🌧️', text:'Rain showers'},
+      81: {emoji:'🌧️', text:'Moderate showers'},
+      82: {emoji:'🌧️', text:'Violent showers'},
+      85: {emoji:'❄️', text:'Slight snow showers'},
+      86: {emoji:'❄️', text:'Heavy snow showers'},
+      95: {emoji:'⛈️', text:'Thunderstorm'},
+      96: {emoji:'⛈️', text:'Thunderstorm with hail'},
+      99: {emoji:'⛈️', text:'Severe thunderstorm'}
+    };
+
+    function mapWeather(code){
+      return weatherCodeMap.hasOwnProperty(code) ? weatherCodeMap[code] : {emoji:'🌈', text:'Unknown'};
+    }
+
+    async function fetchWeather(lat, lon){
+      elCond.textContent = 'Loading…';
+      try{
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Network response not ok');
+        const data = await res.json();
+        if(!data || !data.current_weather) throw new Error('No current weather data');
+        const cw = data.current_weather;
+        const t = Math.round(cw.temperature);
+        const m = mapWeather(cw.weathercode);
+        elEmoji.textContent = m.emoji;
+        elTemp.textContent = `${t}°C`;
+        elCond.textContent = m.text;
+        // reveal
+        card.classList.add('visible');
+      }catch(err){
+        elCond.textContent = 'Unable to fetch';
+      }
+    }
+
+    function requestLocation(){
+      if(!navigator.geolocation){
+        elCond.textContent = 'Enable location to see your weather';
+        return;
+      }
+      elCond.textContent = 'Requesting location…';
+      navigator.geolocation.getCurrentPosition((pos) => {
+        fetchWeather(pos.coords.latitude, pos.coords.longitude);
+      }, (err) => {
+        // Friendly fallback message when user denies permission
+        elCond.textContent = 'Enable location to see your weather';
+      }, { maximumAge: 600000, timeout: 10000 });
+    }
+
+    btnRetry.addEventListener('click', requestLocation);
+    // initialize
+    requestLocation();
+  })();
+  </script>
   <script src="js/main.js"></script>
 </body>
 </html>

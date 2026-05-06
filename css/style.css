@@ -17,6 +17,19 @@
   --font-display:  'Playfair Display', Georgia, serif;
 }
 
+/* Screen-reader only helper */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 /* Dark theme overrides (applied when body has .theme-dark) */
 body.theme-dark {
   --clr-bg:        #0d0d0d;
@@ -137,6 +150,15 @@ h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.2; }
   justify-content: flex-end;
 }
 @media (max-width:900px){ .weather-wrap { justify-content: center; margin-top: 64px; } }
+
+/* Position theme toggle next to weather card */
+.weather-wrap .theme-toggle {
+  margin-left: 10px;
+  align-self: center;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.92rem;
+}
+@media (max-width:900px){ .weather-wrap .theme-toggle { margin-left: 8px; } }
 
 section { padding: 100px 0; }
 

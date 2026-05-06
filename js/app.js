@@ -120,49 +120,62 @@
 					}
 				}
 
+			let _geoAttempt = 0; // count auto-retries per user action
+
 			function requestLocation(){
 				const _elCond = elCond();
 				if(!_elCond) return;
-					// If page is not served in a secure context, geolocation may be blocked by the browser
-					if(!window.isSecureContext){
-						_elCond.textContent = 'Geolocation requires HTTPS or localhost. Use Retry to enter coordinates manually.';
-						return;
-					}
-					if(!navigator.geolocation){
-						_elCond.textContent = 'Enable location to see your weather';
-						return;
-					}
-						_elCond.textContent = 'Requesting location…';
-						// Increase timeout and avoid forcing high accuracy (can be slower). Keep a cached max age.
-						const geoOptions = { maximumAge: 600000, timeout: 20000, enableHighAccuracy: false };
-						navigator.geolocation.getCurrentPosition((pos) => {
-							console.log('geolocation success', pos.coords);
-							fetchWeather(pos.coords.latitude, pos.coords.longitude);
-						}, async (err) => {
-							console.warn('geolocation error', err);
-							// Friendly fallback message when user denies permission or another error occurs
-							if(err && err.code === 1){ // PERMISSION_DENIED
-								_elCond.textContent = 'Enable location to see your weather';
-							} else if(err && err.code === 3){ // TIMEOUT
-								_elCond.textContent = 'Location error: Timeout expired — click Retry and enter a city or coordinates.';
-							} else if(err && err.message){
-								_elCond.textContent = `Location error: ${err.message}`;
+				// Notify if insecure context but still attempt geolocation (some browsers may block it)
+				if(!window.isSecureContext){
+					_elCond.textContent = 'Note: Geolocation works best on HTTPS or localhost — attempting anyway.';
+				}
+				if(!navigator.geolocation){
+					_elCond.textContent = 'Geolocation not supported in this browser';
+					return;
+				}
+
+				_geoAttempt = 0;
+				_elCond.textContent = 'Requesting location…';
+
+				const geoOptions = { maximumAge: 600000, timeout: 20000, enableHighAccuracy: false };
+
+				const doGeo = (options) => {
+					navigator.geolocation.getCurrentPosition((pos) => {
+						console.log('geolocation success', pos.coords);
+						fetchWeather(pos.coords.latitude, pos.coords.longitude);
+					}, (err) => {
+						console.warn('geolocation error', err);
+						if(err && err.code === 1){ // PERMISSION_DENIED
+							_elCond.textContent = 'Enable location to see your weather';
+							return;
+						}
+						if(err && err.code === 3){ // TIMEOUT
+							if(_geoAttempt === 0){
+								// retry once with higher accuracy and longer timeout
+								_geoAttempt++;
+								_elCond.textContent = 'Location timeout — retrying with higher accuracy…';
+								const retryOptions = { maximumAge: 600000, timeout: 30000, enableHighAccuracy: true };
+								return doGeo(retryOptions);
 							} else {
-								_elCond.textContent = 'Location unavailable';
+								_elCond.textContent = 'Location error: Timeout expired — automatic retry failed. Please try again.';
+								return;
 							}
-							// If the page is insecure (file://) or geolocation times out, the Retry flow allows manual entry.
-						}, geoOptions);
+						}
+						if(err && err.message){
+							_elCond.textContent = `Location error: ${err.message}`;
+						} else {
+							_elCond.textContent = 'Location unavailable';
+						}
+					}, options);
+				};
+
+				doGeo(geoOptions);
 			}
 
-				function onRetryClick(){
-					// Give user the option to retry automatic location or enter coordinates manually
-							const tryGeo = window.confirm('Retry automatic location? Click Cancel to enter a city name or coordinates.');
-							if(tryGeo){
-								requestLocation();
-							} else {
-								promptForLocation();
-							}
-				}
+			function onRetryClick(){
+				// Always retry automatic geolocation when Retry is clicked
+				requestLocation();
+			}
 
 		function init(){
 			const retry = btnRetry();

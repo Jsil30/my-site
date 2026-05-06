@@ -65,6 +65,46 @@ h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.2; }
   margin-inline: auto;
 }
 
+/* utility helpers (migrated from inline styles) */
+.flex-end { display:flex; justify-content:flex-end; }
+.text-center-max { text-align:center; max-width:600px; margin:0 auto; }
+.text-center-max-lg { text-align:center; max-width:600px; margin:0 auto 3.5rem; }
+.btn-primary.center { margin:0 auto; display:inline-flex; }
+
+/* Weather widget styles (moved from inline <style> in index.html) */
+.weather-card {
+  margin: 12px 0 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  width: fit-content;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  color: var(--clr-text);
+  backdrop-filter: blur(6px);
+  font-size: 0.92rem;
+}
+.weather-emoji { font-size: 1.15rem; line-height: 1; }
+.weather-info { display:flex; flex-direction:row; gap:0.45rem; align-items:center; }
+.weather-temp { font-weight:700; font-size:1rem; }
+.weather-cond { font-size:0.82rem; color:var(--clr-muted); }
+.weather-meta { display:none; }
+.weather-actions { margin-left: 0.4rem; display:flex; gap:0.4rem; align-items:center; }
+.weather-btn { padding:0.25rem 0.5rem; border-radius:8px; border:1px solid var(--clr-border); background:transparent; color:var(--clr-text); font-size:0.78rem; cursor:pointer; }
+.weather-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent); }
+@media (max-width:900px){ .weather-card{ margin-inline:auto; } }
+
+/* Wrapper to keep the weather card below the fixed navbar (moved from inline <style>) */
+.weather-wrap {
+  margin-top: 72px; /* push below the fixed navbar (adjust if you change navbar padding) */
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width:900px){ .weather-wrap { justify-content: center; margin-top: 64px; } }
+
 section { padding: 100px 0; }
 
 /* =========================================

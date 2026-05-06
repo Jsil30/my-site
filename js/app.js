@@ -39,6 +39,37 @@
 			99: {emoji:'⛈️', text:'Severe thunderstorm'}
 		};
 
+		// US state name -> abbreviation map for nicer display when country is US
+		const US_STATE_ABBREV = {
+			'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY','District of Columbia':'DC'
+		};
+
+		async function reverseGeocode(lat, lon){
+			try{
+				const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1&language=en&format=json`;
+				const res = await fetch(url);
+				if(!res.ok) throw new Error('Reverse geocoding failed');
+				const data = await res.json();
+				if(!data || !data.results || data.results.length === 0) return null;
+				const p = data.results[0];
+				const city = p.name || p.locality || p.admin2 || '';
+				let admin1 = p.admin1 || '';
+				const country = (p.country_code || '').toUpperCase();
+				if(country === 'US' && admin1){
+					// Map full state name to abbreviation when possible
+					const abbr = US_STATE_ABBREV[admin1];
+					if(abbr) admin1 = abbr;
+				}
+				if(city && admin1) return `${city}, ${admin1}`;
+				if(city && p.country) return `${city}, ${p.country}`;
+				if(city) return city;
+				return null;
+			}catch(err){
+				console.warn('reverseGeocode error', err);
+				return null;
+			}
+		}
+
 		function mapWeather(code){
 			return weatherCodeMap.hasOwnProperty(code) ? weatherCodeMap[code] : {emoji:'🌈', text:'Unknown'};
 		}
@@ -58,7 +89,13 @@
 				const m = mapWeather(cw.weathercode);
 				if(elEmoji()) elEmoji().textContent = m.emoji;
 				if(elTemp()) elTemp().textContent = `${t}°C`;
-				if(elCond()) elCond().textContent = m.text;
+				// Attempt reverse geocoding to show City, State (fallback to weather text)
+				const loc = await reverseGeocode(lat, lon);
+				if(loc){
+					if(elCond()) elCond().textContent = loc;
+				} else {
+					if(elCond()) elCond().textContent = m.text;
+				}
 				if(card()) card().classList.add('visible');
 			}catch(err){
 					console.error('fetchWeather error', err);

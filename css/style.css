@@ -17,6 +17,34 @@
   --font-display:  'Playfair Display', Georgia, serif;
 }
 
+/* Dark theme overrides (applied when body has .theme-dark) */
+body.theme-dark {
+  --clr-bg:        #0d0d0d;
+  --clr-surface:   #161616;
+  --clr-card:      #1e1e1e;
+  --clr-accent:    #c084fc;
+  --clr-accent2:   #f0abfc;
+  --clr-text:      #f1f1f1;
+  --clr-muted:     #9a9a9a;
+  --clr-border:    #2e2e2e;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  appearance: none;
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface);
+  color: var(--clr-text);
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15,23,32,0.04);
+  transition: transform var(--transition), background var(--transition), color var(--transition);
+}
+.theme-toggle:hover { transform: translateY(-2px); }
+.theme-toggle[aria-pressed="true"] { background: var(--clr-accent); color: var(--clr-surface); border-color: var(--clr-accent); }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }

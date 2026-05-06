@@ -223,6 +223,38 @@
 		return { init };
 	})();
 
+		// Theme toggling module
+		const themeModule = (() => {
+			const key = 'site-theme'; // 'light' or 'dark'
+			const btn = () => document.getElementById('theme-toggle');
+
+			function applyTheme(t){
+				const isDark = t === 'dark';
+				document.body.classList.toggle('theme-dark', isDark);
+				const b = btn();
+				if(b){
+					b.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+					b.textContent = isDark ? '☀️' : '🌙';
+				}
+			}
+
+			function toggle(){
+				const cur = localStorage.getItem(key) || 'light';
+				const next = cur === 'dark' ? 'light' : 'dark';
+				localStorage.setItem(key, next);
+				applyTheme(next);
+			}
+
+			function init(){
+				const saved = localStorage.getItem(key) || 'light';
+				applyTheme(saved);
+				const b = btn();
+				if(b) b.addEventListener('click', toggle);
+			}
+
+			return { init, toggle };
+		})();
+
 	// UI: navbar scroll and reveal effects (migrated from main.js)
 	const uiModule = (() => {
 		function init(){
@@ -264,6 +296,7 @@
 	document.addEventListener('DOMContentLoaded', () => {
 		uiModule.init();
 		weatherModule.init();
+			themeModule.init();
 	});
 
 })();

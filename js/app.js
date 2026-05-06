@@ -89,13 +89,13 @@
 				const m = mapWeather(cw.weathercode);
 				if(elEmoji()) elEmoji().textContent = m.emoji;
 				if(elTemp()) elTemp().textContent = `${t}°C`;
-				// Attempt reverse geocoding to show City, State (fallback to weather text)
+				// Attempt reverse geocoding to show City, State in the header; keep weather text in the card
 				const loc = await reverseGeocode(lat, lon);
-				if(loc){
-					if(elCond()) elCond().textContent = loc;
-				} else {
-					if(elCond()) elCond().textContent = m.text;
+				const headerLocEl = document.getElementById('weather-location');
+				if(loc && headerLocEl){
+					headerLocEl.textContent = loc;
 				}
+				if(elCond()) elCond().textContent = m.text;
 				if(card()) card().classList.add('visible');
 			}catch(err){
 					console.error('fetchWeather error', err);

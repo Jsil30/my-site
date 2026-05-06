@@ -57,6 +57,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Smooth theme transitions */
+html, body, .container, .navbar, .hero, section, .weather-card, .avatar-card {
+  transition: background-color 260ms ease, color 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
+}
+
 img { display: block; max-width: 100%; }
 a  { color: inherit; text-decoration: none; }
 ul { list-style: none; }
@@ -179,6 +184,8 @@ body::before {
   font-weight: 700;
   color: var(--clr-accent);
 }
+
+.nav-location { color: var(--clr-muted); }
 
 .nav-links {
   display: flex;

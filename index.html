@@ -19,7 +19,10 @@
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar" id="navbar">
     <div class="container">
-      <a href="#" class="nav-logo">Jani.</a>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <a href="#" class="nav-logo">Jani.</a>
+        <div class="nav-location" id="weather-location" aria-live="polite" style="font-size:0.85rem; color:var(--clr-muted);">&nbsp;</div>
+      </div>
       <ul class="nav-links">
         <li><a href="#about">About</a></li>
         <li><a href="#services">Services</a></li>
